@@ -1,10 +1,36 @@
+import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-model_name = "./finetuned_mega"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto")
+# Caminho absoluto do modelo
+model_path = os.path.abspath("./finetuned_mega")
 
+# Inicializar variáveis como None
+tokenizer = None
+model = None
+
+# Função para carregar o modelo se existir
+def carregar_modelo():
+    global tokenizer, model
+    if os.path.exists(model_path) and os.path.isdir(model_path):
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto")
+            print(f"✅ Modelo carregado de {model_path}")
+        except Exception as e:
+            print(f"❌ Erro ao carregar modelo: {e}")
+            tokenizer = None
+            model = None
+    else:
+        print(f"⚠️ Modelo não encontrado em {model_path}, execute o fine-tuning primeiro.")
+
+# Carregar modelo ao iniciar o serviço
+carregar_modelo()
+
+# Função de previsão
 def gerar_previsao(date_str: str) -> list[int]:
+    if tokenizer is None or model is None:
+        raise RuntimeError("Modelo ainda não carregado. Execute o fine-tuning primeiro.")
+
     prompt = f"Digits: {date_str} -> Numbers:"
     input_ids = tokenizer(prompt, return_tensors="pt").input_ids
 

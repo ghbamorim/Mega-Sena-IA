@@ -1,5 +1,8 @@
 fastapi
 uvicorn[standard]
+pydantic
+datasets
 transformers
 torch
-pydantic
+peft
+numpy
