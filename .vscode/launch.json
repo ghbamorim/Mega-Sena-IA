@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI Debug",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn", // Usa como módulo
+      "args": [
+        "app.main:app", // seu arquivo principal FastAPI
+        "--reload", // hot reload para desenvolvimento
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "jinja": true,
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}

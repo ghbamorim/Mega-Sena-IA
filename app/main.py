@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from app.controllers import preview_controller, train_controller
 
-app = FastAPI(title="Previsão de Números da Loteria")
+app = FastAPI(title="Lottery Numbers Prediction")
+
+# Include API routers
 app.include_router(preview_controller.router)
 app.include_router(train_controller.router)
 

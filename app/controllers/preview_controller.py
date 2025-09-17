@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException, Query
 from datetime import datetime
 from app.models.preview_model import PreviewResponse
-from app.services.preview_service import gerar_previsao
+from app.services.preview_service import generate_prediction
 
 router = APIRouter()
 
-@router.get("/previsao", response_model=PreviewResponse)
-def previsao(data: str = Query(..., description="Data no formato DD/MM/AAAA")):
+@router.get("/preview", response_model=PreviewResponse)
+def preview(date: str = Query(..., description="Date in format DD/MM/YYYY")):
     try:
-        dt = datetime.strptime(data, "%d/%m/%Y")
+        dt = datetime.strptime(date, "%d/%m/%Y")
     except ValueError:
-        raise HTTPException(status_code=400, detail="Formato de data inválido. Use DD/MM/AAAA.")
+        raise HTTPException(status_code=400, detail="Invalid date format. Use DD/MM/YYYY.")
 
     date_str = dt.strftime("%d %m %Y")
-    numeros = gerar_previsao(date_str)
-    return PreviewResponse(date=data, numbers=numeros)
+    numbers = generate_prediction(date_str)
+    return PreviewResponse(date=date, numbers=numbers)

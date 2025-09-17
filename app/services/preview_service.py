@@ -1,35 +1,44 @@
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from app.config import config
 
-# Caminho absoluto do modelo
-model_path = os.path.abspath("./finetuned_mega")
+# Local model path (same as OUTPUT_DIR used during training)
+model_path = os.path.abspath(config.OUTPUT_DIR)
 
-# Inicializar variáveis como None
+# Initialize variables as None
 tokenizer = None
 model = None
 
-# Função para carregar o modelo se existir
-def carregar_modelo():
+def load_model():
+    """
+    Loads the model saved in OUTPUT_DIR if it exists.
+    """
     global tokenizer, model
-    if os.path.exists(model_path) and os.path.isdir(model_path):
+    
+    if os.path.isdir(model_path) and (
+        os.path.exists(os.path.join(model_path, "model.safetensors")) or
+        os.path.exists(os.path.join(model_path, "config.json"))
+    ):
         try:
             tokenizer = AutoTokenizer.from_pretrained(model_path)
             model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto")
-            print(f"✅ Modelo carregado de {model_path}")
+            print(f"✅ Model loaded from {model_path}")
         except Exception as e:
-            print(f"❌ Erro ao carregar modelo: {e}")
+            print(f"❌ Error loading model: {e}")
             tokenizer = None
             model = None
     else:
-        print(f"⚠️ Modelo não encontrado em {model_path}, execute o fine-tuning primeiro.")
+        print(f"⚠️ No model found in {model_path}. Run the first fine-tuning before generating predictions.")
 
-# Carregar modelo ao iniciar o serviço
-carregar_modelo()
+# Load model at service startup
+load_model()
 
-# Função de previsão
-def gerar_previsao(date_str: str) -> list[int]:
+def generate_prediction(date_str: str) -> list[int]:
+    """
+    Generates number predictions from a given date.
+    """
     if tokenizer is None or model is None:
-        raise RuntimeError("Modelo ainda não carregado. Execute o fine-tuning primeiro.")
+        raise RuntimeError("Model not loaded yet. Run fine-tuning first.")
 
     prompt = f"Digits: {date_str} -> Numbers:"
     input_ids = tokenizer(prompt, return_tensors="pt").input_ids
