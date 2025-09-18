@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run SAM Local",
+      "type": "shell",
+      "command": "sam local invoke HelloWorldFunction -d 5890"
+    }
+  ]
+}
