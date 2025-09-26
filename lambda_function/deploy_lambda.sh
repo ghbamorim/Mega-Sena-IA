@@ -54,5 +54,5 @@ else
 fi
 
 # 5. Invocar Lambda
-aws --endpoint-url=$LOCALSTACK_URL_HOST lambda invoke --function-name $FUNCTION_NAME --payload '{}' response.json --region $REGION --cli-binary-format raw-in-base64-out
-cat response.json
+#aws --endpoint-url=$LOCALSTACK_URL_HOST lambda invoke --function-name $FUNCTION_NAME --payload '{}' response.json --region $REGION --cli-binary-format raw-in-base64-out
+#cat response.json

@@ -30,3 +30,6 @@ echo "========================"
 echo "=== RETORNO DA LAMBDA ==="
 cat response.json
 echo "=========================="
+
+
+
