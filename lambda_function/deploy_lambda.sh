@@ -1,16 +1,37 @@
 #!/bin/bash
 
-FUNCTION_NAME="minha_lambda"
-ZIP_FILE="lambda_package.zip"
-HANDLER="lambda_function.lambda_handler"
-ROLE="arn:aws:iam::000000000000:role/lambda-role"
-S3_BUCKET="meu-bucket"
-LOCALSTACK_URL="http://localhost:4566"
+set -e
+trap 'echo "Erro no script. Abortando."' ERR
 
-# 1. Criar o pacote da Lambda
-echo "Empacotando função Lambda..."
-rm -f $ZIP_FILE
-rm -rf build
+# Carregar variáveis do .env
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+else
+    echo ".env não encontrado!"
+    exit 1
+fi
+
+# Ativar venv ou criar se necessário
+if [ -f ./venv/bin/activate ]; then
+    source ./venv/bin/activate
+else
+    python3 -m venv venv
+    source ./venv/bin/activate
+fi
+pip install -q boto3 requests
+
+# 1. Criar bucket S3 (host)
+echo "Verificando bucket S3..."
+if ! aws --endpoint-url=$LOCALSTACK_URL_HOST s3api head-bucket --bucket $S3_BUCKET --region $REGION > /dev/null 2>&1; then
+    echo "Bucket $S3_BUCKET não existe. Criando..."
+    aws --endpoint-url=$LOCALSTACK_URL_HOST s3api create-bucket --bucket $S3_BUCKET --region $REGION
+fi
+
+# 2. Enviar dataset.json via Python
+python3 upload_dataset.py
+
+# 3. Empacotar Lambda
+rm -rf build $ZIP_FILE
 mkdir -p build
 pip install --target ./build requests boto3 -q
 cp lambda_function.py build/
@@ -18,40 +39,20 @@ cd build || exit
 zip -r ../$ZIP_FILE . > /dev/null
 cd ..
 
-# 2. Criar ou atualizar a função Lambda com timeout maior
-echo "Criando/atualizando função Lambda..."
-aws --endpoint-url=$LOCALSTACK_URL lambda get-function --function-name $FUNCTION_NAME > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-    aws --endpoint-url=$LOCALSTACK_URL lambda update-function-code \
-        --function-name $FUNCTION_NAME \
-        --zip-file fileb://$ZIP_FILE
-    aws --endpoint-url=$LOCALSTACK_URL lambda update-function-configuration \
-        --function-name $FUNCTION_NAME \
-        --timeout 60
+# 4. Criar ou atualizar Lambda
+if aws --endpoint-url=$LOCALSTACK_URL_HOST lambda get-function --function-name $FUNCTION_NAME --region $REGION > /dev/null 2>&1; then
+    aws --endpoint-url=$LOCALSTACK_URL_HOST lambda update-function-code --function-name $FUNCTION_NAME --zip-file fileb://$ZIP_FILE --region $REGION
 else
-    aws --endpoint-url=$LOCALSTACK_URL lambda create-function \
+    aws --endpoint-url=$LOCALSTACK_URL_HOST lambda create-function \
         --function-name $FUNCTION_NAME \
-        --runtime python3.11 \
+        --runtime python3.10 \
         --role $ROLE \
         --handler $HANDLER \
         --zip-file fileb://$ZIP_FILE \
-        --timeout 60
+        --timeout 60 \
+        --region $REGION
 fi
 
-# 3. Esperar função estar disponível
-echo "Aguardando função estar disponível..."
-while true; do
-    aws --endpoint-url=$LOCALSTACK_URL lambda get-function --function-name $FUNCTION_NAME > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        break
-    fi
-    sleep 1
-done
-
-# 4. Invocar a função e exibir JSON
-echo "Invocando função Lambda..."
-aws --endpoint-url=$LOCALSTACK_URL lambda invoke \
-    --function-name $FUNCTION_NAME \
-    --payload '{}' response.json
+# 5. Invocar Lambda
+aws --endpoint-url=$LOCALSTACK_URL_HOST lambda invoke --function-name $FUNCTION_NAME --payload '{}' response.json --region $REGION --cli-binary-format raw-in-base64-out
 cat response.json
-rm -rf build
