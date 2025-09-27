@@ -1,12 +1,27 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
+from threading import Thread
+
+# Carregar variáveis do .env
+load_dotenv()
+
 from app.controllers import preview_controller, train_controller
+from app.workers.train_worker import start_worker  # Apenas import da função, sem loops
 
 app = FastAPI(title="Lottery Numbers Prediction")
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 # Include API routers
 app.include_router(preview_controller.router)
 app.include_router(train_controller.router)
 
+# Iniciar worker em thread separada
+worker_thread = Thread(target=start_worker, daemon=True)
+worker_thread.start()
 
 if __name__ == "__main__":
     import uvicorn

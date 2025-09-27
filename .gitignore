@@ -207,3 +207,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 mega_sena_key.pem
+ec2_app/models
+lambda_function/lambda.zip
+lambda_function/lambda_package.zip
+lambda_function/lambda_function.zip
+lambda_function/localstack_data
+lambda_function/download

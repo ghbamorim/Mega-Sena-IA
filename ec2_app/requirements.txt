@@ -6,3 +6,4 @@ transformers
 torch
 peft
 numpy
+boto3

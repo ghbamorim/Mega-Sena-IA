@@ -1,10 +1,11 @@
 #!/bin/bash
-
 set -e
 
 # Carregar variáveis do .env
 if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+    set -a
+    source .env
+    set +a
 else
     echo ".env não encontrado!"
     exit 1
@@ -30,6 +31,3 @@ echo "========================"
 echo "=== RETORNO DA LAMBDA ==="
 cat response.json
 echo "=========================="
-
-
-

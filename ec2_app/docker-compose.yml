@@ -1,0 +1,14 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,lambda,s3
+      - DEBUG=1
+      - PERSISTENCE=1
+      - LS_LOG=trace
+    volumes:
+      - "./localstack_data:/tmp/localstack_data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
