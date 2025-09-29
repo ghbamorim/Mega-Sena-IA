@@ -3,11 +3,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from threading import Thread
 
-# Carregar variáveis do .env
+# Load variables from .env
 load_dotenv()
 
 from app.controllers import preview_controller, train_controller
-from app.workers.train_worker import start_worker  # Apenas import da função, sem loops
+from app.workers.train_worker import start_worker  # Just import the function, without loops
 
 app = FastAPI(title="Lottery Numbers Prediction")
 
@@ -19,7 +19,7 @@ def health_check():
 app.include_router(preview_controller.router)
 app.include_router(train_controller.router)
 
-# Iniciar worker em thread separada
+# Start worker in a separate thread
 worker_thread = Thread(target=start_worker, daemon=True)
 worker_thread.start()
 

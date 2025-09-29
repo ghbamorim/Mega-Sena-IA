@@ -16,4 +16,4 @@ def training_background():
 def start_training():
     thread = threading.Thread(target=training_background)
     thread.start()
-    return TrainResponse(status="started", message="LoRA training launched in background")
+    return TrainResponse(status="started", message="Training launched in background")

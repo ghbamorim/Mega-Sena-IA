@@ -20,7 +20,7 @@ sqs = boto3.client(
 )
 
 def poll_sqs():
-    logging.info("Worker SQS iniciado...")
+    logging.info("SQS worker started...")
     while True:
         try:
             messages = sqs.receive_message(
@@ -29,7 +29,7 @@ def poll_sqs():
                 WaitTimeSeconds=20
             )
         except Exception as e:
-            logging.error(f"Erro ao receber mensagens do SQS (QueueUrl={SQS_QUEUE_URL}): {e}")
+            logging.error(f"Error receiving messages from SQS (QueueUrl={SQS_QUEUE_URL}): {e}")
             time.sleep(5)
             continue
 
@@ -40,11 +40,11 @@ def poll_sqs():
                     try:
                         r = requests.post(TRAIN_ENDPOINT, timeout=60)
                         if r.status_code == 200:
-                            logging.info("Treinamento disparado com sucesso!")
+                            logging.info("Training successfully triggered!")
                         else:
-                            logging.error(f"Erro ao disparar treinamento: {r.text}")
+                            logging.error(f"Error triggering training: {r.text}")
                     except Exception as e:
-                        logging.error(f"Exception ao chamar endpoint: {e}")
+                        logging.error(f"Exception calling endpoint: {e}")
 
                 try:
                     sqs.delete_message(
@@ -52,7 +52,7 @@ def poll_sqs():
                         ReceiptHandle=msg["ReceiptHandle"]
                     )
                 except Exception as e:
-                    logging.error(f"Erro ao deletar mensagem do SQS (QueueUrl={SQS_QUEUE_URL}): {e}")
+                    logging.error(f"Error deleting message from SQS (QueueUrl={SQS_QUEUE_URL}): {e}")
         time.sleep(5)
 
 def start_worker():
