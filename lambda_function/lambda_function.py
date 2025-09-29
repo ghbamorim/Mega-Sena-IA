@@ -11,9 +11,9 @@ BUCKET = os.getenv("S3_BUCKET", "meu-bucket")
 DATASET_FILE = os.getenv("DATASET_FILE", "dataset.json")
 REGION = os.getenv("REGION", "us-east-1")
 LOCALSTACK_URL = os.getenv("LOCALSTACK_URL_CONTAINER", "http://localstack:4566")
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "")  # URL da fila SQS
+SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL", "")  # SQS queue URL
 
-# Timeout da API
+# API timeout
 API_TIMEOUT = int(os.getenv("API_TIMEOUT", "10"))
 
 s3 = boto3.client(
@@ -31,21 +31,21 @@ sqs = boto3.client(
 def lambda_handler(event, context):
     dataset = []
     try:
-        logger.info(f"Lendo {DATASET_FILE} do bucket {BUCKET}...")
+        logger.info(f"Reading {DATASET_FILE} from bucket {BUCKET}...")
         response = s3.get_object(Bucket=BUCKET, Key=DATASET_FILE)
         dataset = json.loads(response["Body"].read())
-        logger.info(f"Dataset carregado. Total de registros: {len(dataset)}")
+        logger.info(f"Dataset loaded. Total records: {len(dataset)}")
     except s3.exceptions.NoSuchKey:
-        logger.warning(f"{DATASET_FILE} não encontrado. Criando novo dataset...")
+        logger.warning(f"{DATASET_FILE} not found. Creating a new dataset...")
         dataset = []
     except Exception as e:
-        logger.error(f"Erro ao carregar dataset: {e}")
-        return {"dataset": dataset, "total_registros": len(dataset)}
+        logger.error(f"Error loading dataset: {e}")
+        return {"dataset": dataset, "total_records": len(dataset)}
 
     last_number = dataset[0]["number"] if dataset else 0
-    logger.info(f"Último concurso no dataset: {last_number}")
+    logger.info(f"Last contest in dataset: {last_number}")
 
-    # Último concurso na API
+    # Last contest from API
     try:
         r = requests.get(
             "https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena",
@@ -53,9 +53,9 @@ def lambda_handler(event, context):
         )
         r.raise_for_status()
         last_concurso_api = int(r.json()["numero"])
-        logger.info(f"Último concurso na API: {last_concurso_api}")
+        logger.info(f"Last contest from API: {last_concurso_api}")
     except Exception as e:
-        logger.error(f"Erro ao buscar último concurso da API: {e}")
+        logger.error(f"Error fetching last contest from API: {e}")
         last_concurso_api = last_number
 
     loop_count = 0
@@ -75,11 +75,11 @@ def lambda_handler(event, context):
                     "prompt": f"Digits: {data['dataApuracao']} -> Numbers:",
                     "completion": f" {numbers}"
                 })
-                logger.info(f"Concurso {concurso_num} adicionado ao dataset.")
+                logger.info(f"Contest {concurso_num} added to dataset.")
             else:
-                logger.warning(f"Nenhum resultado para o concurso {concurso_num}")
+                logger.warning(f"No result for contest {concurso_num}")
         except Exception as e:
-            logger.error(f"Erro ao buscar concurso {concurso_num}: {e}")
+            logger.error(f"Error fetching contest {concurso_num}: {e}")
         loop_count += 1
 
     try:
@@ -88,9 +88,9 @@ def lambda_handler(event, context):
             Key=DATASET_FILE,
             Body=json.dumps(dataset, ensure_ascii=False).encode("utf-8")
         )
-        logger.info(f"Dataset atualizado com sucesso. Total de registros: {len(dataset)}")
+        logger.info(f"Dataset successfully updated. Total records: {len(dataset)}")
     except Exception as e:
-        logger.error(f"Erro ao salvar dataset: {e}")
+        logger.error(f"Error saving dataset: {e}")
 
     if SQS_QUEUE_URL and loop_count > 0:
         try:
@@ -98,8 +98,8 @@ def lambda_handler(event, context):
                 QueueUrl=SQS_QUEUE_URL,
                 MessageBody=json.dumps({"action": "train_model"})
             )
-            logger.info("Mensagem enviada para SQS para disparar treinamento.")
+            logger.info("Message sent to SQS to trigger training.")
         except Exception as e:
-            logger.error(f"Erro ao enviar mensagem SQS: {e}. url: {SQS_QUEUE_URL}")
+            logger.error(f"Error sending SQS message: {e}. url: {SQS_QUEUE_URL}")
 
-    return {"dataset": dataset[:5], "total_registros": len(dataset)}
+    return {"dataset": dataset[:5], "total_records": len(dataset)}

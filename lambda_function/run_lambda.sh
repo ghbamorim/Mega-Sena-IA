@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
-# Carregar variáveis do .env
+# Load variables from .env
 if [ -f .env ]; then
     set -a
     source .env
     set +a
 else
-    echo ".env não encontrado!"
+    echo ".env not found!"
     exit 1
 fi
 
-# Invocar Lambda e capturar logs e payload
-echo "Invocando Lambda $FUNCTION_NAME..."
+# Invoke Lambda and capture logs and payload
+echo "Invoking Lambda $FUNCTION_NAME..."
 OUTPUT=$(aws --endpoint-url=$LOCALSTACK_URL_HOST lambda invoke \
     --function-name $FUNCTION_NAME \
     --payload '{}' response.json \
@@ -22,12 +22,12 @@ OUTPUT=$(aws --endpoint-url=$LOCALSTACK_URL_HOST lambda invoke \
     --query 'LogResult' \
     --output text)
 
-# Decodificar logs base64
-echo "=== LOGS DA EXECUÇÃO ==="
+# Decode base64 logs
+echo "=== EXECUTION LOGS ==="
 echo $OUTPUT | base64 --decode
-echo "========================"
+echo "======================"
 
-# Exibir payload
-echo "=== RETORNO DA LAMBDA ==="
+# Show payload
+echo "=== LAMBDA RETURN ==="
 cat response.json
-echo "=========================="
+echo "====================="

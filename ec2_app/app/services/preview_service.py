@@ -1,9 +1,9 @@
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from app.config import config
 
 # Local model path (same as OUTPUT_DIR used during training)
-model_path = os.path.abspath(config.OUTPUT_DIR)
+OUTPUT_DIR: str = os.getenv("OUTPUT_DIR", "./finetuned_mega")
+model_path = os.path.abspath(OUTPUT_DIR)
 
 # Initialize variables as None
 tokenizer = None

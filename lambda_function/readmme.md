@@ -6,7 +6,7 @@
 
 USE_S3=true
 S3_BUCKET=meu-bucket
-DATASET_FILE=dataset.json # nome consistente para o dataset
+DATASET_FILE=dataset.json  
 DATASET_PATH_LOCAL=./dataset.json
 OUTPUT_DIR=./finetuned_mega
 BASE_MODEL=EleutherAI/gpt-neo-125M
