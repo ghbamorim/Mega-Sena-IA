@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-datasets
-transformers
-torch
-peft
-numpy
