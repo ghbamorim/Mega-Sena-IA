@@ -5,7 +5,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=sqs,lambda,s3
+      - SERVICES=sqs,lambda,s3,events
       - DEBUG=1
       - PERSISTENCE=1
       - LS_LOG=trace

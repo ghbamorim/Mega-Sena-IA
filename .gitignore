@@ -215,3 +215,4 @@ lambda_function/localstack_data
 lambda_function/download
 lambda_function/response.json
 ec2_app/mega_sena_key.pem
+lambda_function/package
