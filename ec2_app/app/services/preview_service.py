@@ -10,7 +10,7 @@ import random
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-class MegaSenaService:
+class PreviewService:
     def __init__(self):
         self.use_s3 = os.getenv("USE_S3", "False").lower() == "true"
         self.bucket = os.getenv("S3_BUCKET", "my-bucket")
@@ -174,7 +174,7 @@ class MegaSenaService:
         return final_numbers
 
 
-mega_service = MegaSenaService()
+mega_service = PreviewService()
 
 def generate_prediction(date_str: str) -> list[int]:
     return mega_service.generate_prediction(date_str)

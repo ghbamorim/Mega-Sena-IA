@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-class MegaSenaService:
+class TrainService:
     def __init__(self):
         self.model_name = "EleutherAI/gpt-neo-125M"
         self.output_dir = "./finetuned_mega"
@@ -32,6 +32,7 @@ class MegaSenaService:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def _load_dataset(self):
+        """Load dataset from S3 or local file"""
         data = []
         if self.use_s3:
             try:
@@ -45,22 +46,19 @@ class MegaSenaService:
                 logger.info(f"✅ Dataset loaded from S3 ({self.bucket}/{self.dataset_file})")
             except Exception as e:
                 logger.error(f"❌ Failed to load dataset from S3: {e}")
+                raise
         else:
-            if not os.path.exists("dataset.json"):
-                raise FileNotFoundError("❌ dataset.json not found!")
-            with open("dataset.json", "r", encoding="utf-8") as f:
+            if not os.path.exists(self.dataset_file):
+                raise FileNotFoundError(f"❌ {self.dataset_file} not found!")
+            with open(self.dataset_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 logger.info("✅ Dataset loaded locally")
 
-        texts = []
-        for item in data:
-            prompt = item.get("prompt", "")
-            completion = item.get("completion", "")
-            texts.append(prompt + completion)
-
+        texts = [item.get("prompt", "") + item.get("completion", "") for item in data]
         return Dataset.from_dict({"text": texts})
 
     def _tokenize(self, examples):
+        """Tokenize dataset samples"""
         return self.tokenizer(
             examples["text"],
             truncation=True,
@@ -108,7 +106,7 @@ class MegaSenaService:
         logger.info("✅ Training completed!")
 
 
-# Wrapper function for controller
 def train_model():
-    service = MegaSenaService()
+    """Wrapper called by controller"""
+    service = TrainService()
     service.train()
